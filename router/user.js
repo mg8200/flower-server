@@ -4,16 +4,15 @@ const r = express.Router();
 const jwt = require("jsonwebtoken")
 const config = require("../config")
 const jwtDecode = require("jwt-decode");
-const {
-    result
-} = require("lodash");
+const md5 = require("md5")
 
 // 登录
 r.post("/login", (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+    password = md5(password)
     let arr = [username, password]
-    let sql = "select * from user where username = ? and password = ?"
+    let sql = "select * from users where username = ? and password = ?"
     getdata(sql, arr, result => {
         if (result.length > 0) {
             const token = jwt.sign({
@@ -33,7 +32,7 @@ r.post("/login", (req, res) => {
 r.post("/reg", (req, res) => {
     let obj = req.body;
     let arr1 = [obj.username]
-    let sql1 = "select * from user where username = ?"
+    let sql1 = "select * from users where username = ?"
     getdata(sql1, arr1, (data) => {
         if (data.length > 0) {
             res.send({
@@ -41,9 +40,9 @@ r.post("/reg", (req, res) => {
                 msg: "用户名已存在"
             })
         } else {
-            let sql2 = "INSERT INTO user SET ?";
+            let sql2 = `INSERT INTO users VALUES(null,?,MD5(?))`
             let arr2 = [obj.username, obj.password]
-            getdata(sql2, [obj], (data) => {
+            getdata(sql2, arr2, (data) => {
                 if (data.affectedRows > 0) {
                     res.send({
                         code: 200,
@@ -147,7 +146,7 @@ r.post("/addAddress", (req, res) => {
     let token = req.body.token;
     let uid = jwtDecode(token).id;
     let obj = req.body.obj
-    obj.uid=uid
+    obj.uid = uid
     console.log(obj)
     let sql = "INSERT INTO address SET ?"
     getdata(sql, [obj], result => {
