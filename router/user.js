@@ -12,7 +12,7 @@ r.post("/login", (req, res) => {
     let password = req.body.password;
     password = md5(password)
     let arr = [username, password]
-    let sql = "select * from users where username = ? and password = ?"
+    let sql = "select * from user where username = ? and password = ?"
     getdata(sql, arr, result => {
         if (result.length > 0) {
             const token = jwt.sign({
@@ -32,7 +32,7 @@ r.post("/login", (req, res) => {
 r.post("/reg", (req, res) => {
     let obj = req.body;
     let arr1 = [obj.username]
-    let sql1 = "select * from users where username = ?"
+    let sql1 = "select * from user where username = ?"
     getdata(sql1, arr1, (data) => {
         if (data.length > 0) {
             res.send({
@@ -40,7 +40,7 @@ r.post("/reg", (req, res) => {
                 msg: "用户名已存在"
             })
         } else {
-            let sql2 = `INSERT INTO users VALUES(null,?,MD5(?))`
+            let sql2 = `INSERT INTO user VALUES(null,?,MD5(?))`
             let arr2 = [obj.username, obj.password]
             getdata(sql2, arr2, (data) => {
                 if (data.affectedRows > 0) {
@@ -78,6 +78,7 @@ r.post("/getAddress", (req, res) => {
 // 通过id获取用户的地址列表
 r.get("/getAddress/:id", (req, res) => {
     let id = req.params.id
+    console.log(id)
     let sql = "select * from address where id =?";
     getdata(sql, [id], result => {
         if (result.length > 0) {

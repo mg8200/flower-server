@@ -1,7 +1,4 @@
 const mysql = require("mysql")
-const {
-    result
-} = require("lodash")
 
 const pool = mysql.createPool({
     host: '101.132.151.184',
@@ -13,13 +10,13 @@ const pool = mysql.createPool({
 })
 
 const getData = function (sql, arr, callback) {
-    pool.query(sql,arr,function(err,result){
-        if(err) {
+    pool.query(sql, arr, function (err, result) {
+        if (err) {
             console.log(new Error(err));
             return
         }
         callback(result)
-    })  
+    })
 }
 
 module.exports = getData;
