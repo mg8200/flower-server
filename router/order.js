@@ -79,7 +79,7 @@ r.post("/sureGoods", (req, res) => {
     let id = req.body.id;
     let token = req.body.token;
     let uid = jwtDecode(token).id;
-    let sql = "UPDATE orders SET status=3 where id=? and uid=?"
+    let sql = "UPDATE orders SET status=5 where id=? and uid=?"
     getdata(sql, [id, uid], result => {
         if (result.affectedRows > 0) {
             res.send({
@@ -123,23 +123,67 @@ r.post("/submitComments", (req, res) => {
     })
 })
 
+// 修改订单状态为待审核
+r.post("/checkPending", (req, res) => {
+    let id = req.body.id;
+    let token = req.body.token;
+    let uid = jwtDecode(token).id;
+    let sql = "UPDATE orders SET status=1 where id=? and uid=?";
+    getdata(sql, [id, uid], result => {
+        if (result.affectedRows > 0) {
+            res.send({
+                code: 200,
+                msg: "提交成功",
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "提交失败",
+                data: null
+            })
+        }
+    })
+})
+
+
 //修改状态为完成
 r.post("/reviewCompleted", (req, res) => {
     let id = req.body.id;
     let token = req.body.token;
     let uid = jwtDecode(token).id;
-    let sql = "UPDATE orders SET status=4 where id=? and uid=?";
+    let sql = "UPDATE orders SET status=6 where id=? and uid=?";
     getdata(sql, [id, uid], result => {
         if (result.affectedRows > 0) {
             res.send({
                 code: 200,
                 msg: "收货成功",
-                data: result
             })
         } else {
             res.send({
                 code: 400,
                 msg: "收货失败",
+                data: null
+            })
+        }
+    })
+})
+
+// 取消退货退款
+r.post("/cancelRefund", (req, res) => {
+    let id = req.body.id;
+    let token = req.body.token;
+    let uid = jwtDecode(token).id;
+    let sql = "UPDATE orders SET status=3 where id=? and uid=?";
+    getdata(sql, [id, uid], result => {
+        if (result.affectedRows > 0) {
+            res.send({
+                code: 200,
+                msg: "取消成功",
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "取消失败",
                 data: null
             })
         }
