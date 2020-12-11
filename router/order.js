@@ -123,5 +123,52 @@ r.post("/submitComments", (req, res) => {
     })
 })
 
+//修改状态为完成
+r.post("/reviewCompleted", (req, res) => {
+    let id = req.body.id;
+    let token = req.body.token;
+    let uid = jwtDecode(token).id;
+    let sql = "UPDATE orders SET status=4 where id=? and uid=?";
+    getdata(sql, [id, uid], result => {
+        if (result.affectedRows > 0) {
+            res.send({
+                code: 200,
+                msg: "收货成功",
+                data: result
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "收货失败",
+                data: null
+            })
+        }
+    })
+})
+
+// 评论完成，增加售量
+r.post("/addSales", (req, res) => {
+    let token = req.body.token;
+    let uid = jwtDecode(token).id;
+    let good_id=req.body.id;
+    let count=req.body.count;
+    if (!uid){
+        res.send({
+            code:401,
+            msg:"配置错误"
+        })
+    }else{
+        let sql ="UPDATE goods SET sales=sales+?  where id=?";
+        getdata(sql,[count,good_id],result=>{
+            if (result.affectedRows > 0) {
+                res.send({
+                    code: 200,
+                    msg: "success",
+                })
+            }
+        })
+    }
+})
+
 
 module.exports = r

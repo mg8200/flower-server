@@ -17,7 +17,8 @@ r.post("/login", (req, res) => {
         if (result.length > 0) {
             const token = jwt.sign({
                 id: result[0].id,
-                username: result[0].username
+                username: result[0].username,
+                superPassword: result[0].superPassword,
             }, config.jwtSecret);
             res.send({
                 code: 200,
@@ -40,8 +41,11 @@ r.post("/reg", (req, res) => {
                 msg: "用户名已存在"
             })
         } else {
-            let sql2 = `INSERT INTO user VALUES(null,?,MD5(?))`
-            let arr2 = [obj.username, obj.password]
+            let sql2 = `INSERT INTO user VALUES(null,?,MD5(?),?,?,?)`
+            obj.gender=0;
+            obj.superPassword='000000'
+            obj.birthday='0000-00-00'
+            let arr2 = [obj.username, obj.password,obj.gender,obj.superPassword,obj.birthday]
             getdata(sql2, arr2, (data) => {
                 if (data.affectedRows > 0) {
                     res.send({
@@ -49,6 +53,30 @@ r.post("/reg", (req, res) => {
                         msg: "注册成功"
                     })
                 }
+            })
+        }
+    })
+})
+
+// 修改密码
+r.post("/changePassWrod",(req,res)=>{
+    let token = req.body.token;
+    let obj = jwtDecode(token)
+    let uid = obj.id
+    let password=req.body.password
+    let arr=[password,uid]
+    let sql = "update user set password = MD5(?) where id=?";
+    getdata(sql,arr,data=>{
+        if (data.affectedRows > 0) {
+            res.send({
+                code:200,
+                msg:"密码修改成功"
+            })
+        }
+        else{
+            res.send({
+                code:400,
+                msg:"密码修改失败"
             })
         }
     })

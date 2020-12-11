@@ -8,6 +8,7 @@ const goods = require("./router/goods")
 const user = require("./router/user")
 const shoppingCar =require("./router/shoppingCar")
 const order=require("./router/order")
+const comments =require("./router/comments")
 
 app.listen(3000, (req, res) => {
     debug("服务器已启动端口3030")
@@ -34,3 +35,4 @@ app.use("/goods", goods)
 app.use("/user", user)
 app.use("/shoppingCar",shoppingCar)
 app.use("/order",order)
+app.use("/comments",comments)

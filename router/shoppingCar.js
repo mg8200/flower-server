@@ -79,7 +79,6 @@ r.get("/getCarData/:token", (req, res) => {
 })
 
 // 通过id删除购物车中某一件商品
-
 r.post("/deleteItem",(req,res)=>{
     let id =req.body.id;
     console.log("id：",id)
