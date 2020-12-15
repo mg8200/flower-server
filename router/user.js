@@ -11,19 +11,32 @@ r.post("/login", (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
     password = md5(password)
-    let arr = [username, password]
+    let arr = [username, password];
     let sql = "select * from user where username = ? and password = ?"
     getdata(sql, arr, result => {
         if (result.length > 0) {
-            const token = jwt.sign({
-                id: result[0].id,
-                username: result[0].username,
-                superPassword: result[0].superPassword,
-            }, config.jwtSecret);
+            if (result[0].isOnline == 0) {
+                res.send({
+                    code: 400,
+                    msg: "该用户已被禁用"
+                })
+            } else {
+                const token = jwt.sign({
+                    id: result[0].id,
+                    username: result[0].username,
+                    superPassword: result[0].superPassword,
+                }, config.jwtSecret);
+                res.send({
+                    code: 200,
+                    msg: "登录成功",
+                    token
+                })
+            }
+
+        } else {
             res.send({
-                code: 200,
-                msg: "登录成功",
-                token
+                code: 401,
+                msg: "用户名或者密码错误"
             })
         }
     })
@@ -41,11 +54,11 @@ r.post("/reg", (req, res) => {
                 msg: "用户名已存在"
             })
         } else {
-            let sql2 = `INSERT INTO user VALUES(null,?,MD5(?),?,?,?)`
-            obj.gender=0;
-            obj.superPassword='000000'
-            obj.birthday='0000-00-00'
-            let arr2 = [obj.username, obj.password,obj.gender,obj.superPassword,obj.birthday]
+            let sql2 = `INSERT INTO user VALUES(null,?,MD5(?),?,?)`
+            obj.superPassword = '000000'
+            obj.permissions = 0
+            let arr2 = [obj.username, obj.password, obj.permissions, obj.superPassword];
+            console.log(arr2)
             getdata(sql2, arr2, (data) => {
                 if (data.affectedRows > 0) {
                     res.send({
@@ -59,24 +72,23 @@ r.post("/reg", (req, res) => {
 })
 
 // 修改密码
-r.post("/changePassWrod",(req,res)=>{
+r.post("/changePassWrod", (req, res) => {
     let token = req.body.token;
     let obj = jwtDecode(token)
     let uid = obj.id
-    let password=req.body.password
-    let arr=[password,uid]
+    let password = req.body.password
+    let arr = [password, uid]
     let sql = "update user set password = MD5(?) where id=?";
-    getdata(sql,arr,data=>{
+    getdata(sql, arr, data => {
         if (data.affectedRows > 0) {
             res.send({
-                code:200,
-                msg:"密码修改成功"
+                code: 200,
+                msg: "密码修改成功"
             })
-        }
-        else{
+        } else {
             res.send({
-                code:400,
-                msg:"密码修改失败"
+                code: 400,
+                msg: "密码修改失败"
             })
         }
     })
@@ -194,5 +206,160 @@ r.post("/addAddress", (req, res) => {
 })
 
 
+// 后台管理系统登录
+r.post("/cmsLogin", (req, res) => {
+    let username = req.body.username;
+    let password = req.body.password;
+    password = md5(password)
+    let arr = [username, password]
+    let sql = "select * from user where username = ? and password = ? and permissions!=0"
+    getdata(sql, arr, result => {
+        if (result.length > 0) {
+            const token = jwt.sign({
+                id: result[0].id,
+                username: result[0].username,
+            }, config.jwtSecret);
+            res.send({
+                code: 200,
+                msg: "登录成功",
+                token
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "登录失败，你没有权限登录或用户名或者密码错误",
+            })
+        }
+    })
+})
+
+// 获取用户列表
+// size 每页显示几个
+// currentPage 当前页码
+r.get('/allUser', (req, res) => {
+    let obj = req.query;
+    if (!obj.size) obj.size = 5;
+    if (!obj.currentPage) obj.currentPage = 1;
+    obj.page = (obj.currentPage - 1) * obj.size;
+    let sql = 'SELECT * FROM user LIMIT ?,?'
+    let sql2 = 'SELECT * FROM user'
+    getdata(sql2, [], result => {
+        if (result.length > 0) {
+            getdata(sql, [obj.page, parseInt(obj.size)], data => {
+                if (data.length > 0) {
+                    res.send({
+                        code: 200,
+                        msg: "查询成功",
+                        data: {
+                            data,
+                            size: obj.size,
+                            total: result.length,
+                        }
+                    })
+                } else {
+                    res.send({
+                        code: 400,
+                        msg: "查询数据为空",
+                        data: []
+                    })
+                }
+            })
+        }
+    })
+})
+
+// 修改用户是否允许登录
+r.post("/changeOnline", (req, res) => {
+    let id = req.body.id;
+    if (id == 1) {
+        res.send({
+            code: 400,
+            msg: "超级管理员账户不允许更改"
+        })
+        return
+    }
+    let status = req.body.status;
+    status = status == false ? 0 : 1;
+    let sql = "UPDATE user SET isOnline=? where id=?"
+    getdata(sql, [status, id], result => {
+        if (result.affectedRows > 0) {
+            res.send({
+                code: 200,
+                msg: "修改成功"
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "修改失败"
+            })
+        }
+    })
+})
+
+// 编辑用户信息
+r.post("/changeUserData", (req, res) => {
+    let obj = req.body;
+    obj.isOnline = obj.isOnline == true ? 1 : 0;
+    let sql = "UPDATE user SET username=?,isOnline=?,superPassword=? where id=?";
+    let arr = [obj.username, obj.isOnline, obj.superPassword, obj.id];
+    getdata(sql, arr, result => {
+        if (result.affectedRows > 0) {
+            res.send({
+                code: 200,
+                msg: "修改成功"
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "未进行修改"
+            })
+        }
+    })
+})
+
+// 通过关键字获取用户列表
+r.get('/getUserByKeyWord', (req, res) => {
+    let obj = req.query;
+    let keyword = req.query.keyword
+    let sql = `SELECT * FROM user  WHERE username LIKE '%${keyword}%'`
+    getdata(sql, [], result => {
+        if (result.length > 0) {
+            res.send({
+                code: 200,
+                msg: "查询成功",
+                data: {
+                    data: result,
+                    total: result.length,
+                }
+            })
+        } else {
+            res.send({
+                code: 400,
+                msg: "查询数据为空",
+                data: []
+            })
+        }
+    })
+})
+
+// 删除用户
+
+r.post("/deleteUser",(req,res)=>{
+    let id= req.body.id;
+    let sql ="DELETE FROM user WHERE id=?";
+    getdata(sql,[id],result=>{
+        if(result.affectedRows>0){
+            res.send({
+                code:200,
+                msg:"删除成功"
+            })
+        }else{
+            res.send({
+                code:400,
+                msg:"删除失败"
+            })
+        }
+    }) 
+})
 
 module.exports = r

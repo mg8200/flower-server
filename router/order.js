@@ -194,16 +194,16 @@ r.post("/cancelRefund", (req, res) => {
 r.post("/addSales", (req, res) => {
     let token = req.body.token;
     let uid = jwtDecode(token).id;
-    let good_id=req.body.id;
-    let count=req.body.count;
-    if (!uid){
+    let good_id = req.body.id;
+    let count = req.body.count;
+    if (!uid) {
         res.send({
-            code:401,
-            msg:"配置错误"
+            code: 401,
+            msg: "配置错误"
         })
-    }else{
-        let sql ="UPDATE goods SET sales=sales+?  where id=?";
-        getdata(sql,[count,good_id],result=>{
+    } else {
+        let sql = "UPDATE goods SET sales=sales+?  where id=?";
+        getdata(sql, [count, good_id], result => {
             if (result.affectedRows > 0) {
                 res.send({
                     code: 200,
@@ -214,5 +214,18 @@ r.post("/addSales", (req, res) => {
     }
 })
 
+
+// 获取待审核的订单
+r.get("/auditOrderCount", (req, res) => {
+    let sql = "SELECT count(*) as count FROM orders WHERE `status`=1";
+    getdata(sql, [], result => {
+        if (result.length > 0) {
+            res.send({
+                code: 200,
+                data: result[0]
+            })
+        }
+    })
+})
 
 module.exports = r
