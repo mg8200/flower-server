@@ -6,9 +6,10 @@ const home = require("./router/home")
 const information = require("./router/information")
 const goods = require("./router/goods")
 const user = require("./router/user")
-const shoppingCar =require("./router/shoppingCar")
-const order=require("./router/order")
-const comments =require("./router/comments")
+const shoppingCar = require("./router/shoppingCar")
+const order = require("./router/order")
+const comments = require("./router/comments");
+
 
 app.listen(3000, (req, res) => {
     debug("服务器已启动端口3030")
@@ -27,12 +28,18 @@ app.all('*', function (req, res, next) {
     else next();
 })
 
+
+
+
+
+
+
 app.use(express.static('./public'));
 app.use(bodyParser.json())
 app.use("/home", home)
 app.use("/information", information)
 app.use("/goods", goods)
 app.use("/user", user)
-app.use("/shoppingCar",shoppingCar)
-app.use("/order",order)
-app.use("/comments",comments)
+app.use("/shoppingCar", shoppingCar)
+app.use("/order", order)
+app.use("/comments", comments)

@@ -58,7 +58,6 @@ r.get("/getCarCount/:token", (req, res) => {
 r.get("/getCarData/:token", (req, res) => {
     let token = req.params.token;
     let uid = jwtDecode(token).id;
-    console.log("用户查询了购物车")
     console.log(uid)
     let sql = "select c.*,g.name,g.src,g.price as g_price,g.original_price,g.material from shoppingCar c JOIN `user` u on c.uid=u.id join goods g on g.id=c.goods_id where c.uid=?"
     getdata(sql, [uid], result => {

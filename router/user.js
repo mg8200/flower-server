@@ -35,7 +35,7 @@ r.post("/login", (req, res) => {
 
         } else {
             res.send({
-                code: 401,
+                code: 400,
                 msg: "用户名或者密码错误"
             })
         }
@@ -137,13 +137,11 @@ r.get("/getAddress/:id", (req, res) => {
 })
 
 // 通过id修改用户收货地址
-
 r.post("/changeAddress", (req, res) => {
     let token = req.body.token;
     let uid = jwtDecode(token).id;
     let obj = req.body.obj
     let id = obj.id;
-    // let sql ="update address set name=?,address=?,tel=?,isDefault=? where id=? and uid=?"
     let sql = "update address set ? where id=? and uid=?"
     getdata(sql, [obj, id, uid], result => {
         if (result.affectedRows > 0) {
@@ -205,6 +203,16 @@ r.post("/addAddress", (req, res) => {
     })
 })
 
+
+
+
+
+
+
+
+
+//***************************************************************************************************************************************************************************** 
+// 以下后台管理系统的接口
 
 // 后台管理系统登录
 r.post("/cmsLogin", (req, res) => {
