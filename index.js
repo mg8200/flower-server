@@ -9,15 +9,13 @@ const user = require("./router/user")
 const shoppingCar = require("./router/shoppingCar")
 const order = require("./router/order")
 const comments = require("./router/comments");
-
+const config=require("./config")
 
 app.listen(3000, (req, res) => {
     debug("服务器已启动端口3030")
 })
 
 app.all('*', function (req, res, next) {
-    console.log(req.headers.origin)
-    console.log(req.environ)
     res.header("Access-Control-Allow-Origin", req.headers.origin);
     // res.header("Access-Control-Allow-Origin", '*');
     res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
@@ -27,11 +25,6 @@ app.all('*', function (req, res, next) {
     if (req.method === "OPTIONS") res.send(200); /*让options请求快速返回*/
     else next();
 })
-
-
-
-
-
 
 
 app.use(express.static('./public'));

@@ -25,7 +25,9 @@ r.post("/login", (req, res) => {
                     id: result[0].id,
                     username: result[0].username,
                     superPassword: result[0].superPassword,
-                }, config.jwtSecret);
+                }, config.jwtSecret, {
+                    expiresIn: "7day"
+                });
                 res.send({
                     code: 200,
                     msg: "登录成功",
@@ -89,6 +91,38 @@ r.post("/changePassWrod", (req, res) => {
             res.send({
                 code: 400,
                 msg: "密码修改失败"
+            })
+        }
+    })
+})
+
+// 修改超级密码
+r.post("/changeSuperPassword", (req, res) => {
+    let token = req.body.token;
+    let value = req.body.value;
+    let id = jwt.decode(token).id;
+    let sql = "update user set superPassword =? where id=?";
+    getdata(sql, [value, id], result => {
+        if (result.affectedRows > 0) {
+            let sql2 = 'select * from user where id=?'
+            getdata(sql2, [id], data => {
+                const token = jwt.sign({
+                    id: data[0].id,
+                    username: data[0].username,
+                    superPassword: data[0].superPassword,
+                }, config.jwtSecret, {
+                    expiresIn: "7day"
+                });
+                res.status(200).json({
+                    code: 200,
+                    msg: "修改成功",
+                    token
+                })
+            })
+        } else {
+            res.status(400).json({
+                code: 400,
+                msg: "修改失败"
             })
         }
     })
@@ -203,13 +237,24 @@ r.post("/addAddress", (req, res) => {
     })
 })
 
+// 检查token是否有效
+r.post("/checkToken", (req, res) => {
+    let token = req.body.token
+    jwt.verify(token, config.jwtSecret, (err, decode) => {
+        if (err) {
+            res.send({
+                code: 401,
+                msg: "无效token或token已过期,请重新登录"
+            })
+        } else {
+            res.status(200).json({
+                code: 200,
+                msg: "验证成功"
+            })
+        }
+    })
 
-
-
-
-
-
-
+})
 
 //***************************************************************************************************************************************************************************** 
 // 以下后台管理系统的接口
@@ -226,7 +271,9 @@ r.post("/cmsLogin", (req, res) => {
             const token = jwt.sign({
                 id: result[0].id,
                 username: result[0].username,
-            }, config.jwtSecret);
+            }, config.jwtSecret, {
+                expiresIn: config.expiresIn
+            });
             res.send({
                 code: 200,
                 msg: "登录成功",
@@ -352,22 +399,22 @@ r.get('/getUserByKeyWord', (req, res) => {
 
 // 删除用户
 
-r.post("/deleteUser",(req,res)=>{
-    let id= req.body.id;
-    let sql ="DELETE FROM user WHERE id=?";
-    getdata(sql,[id],result=>{
-        if(result.affectedRows>0){
+r.post("/deleteUser", (req, res) => {
+    let id = req.body.id;
+    let sql = "DELETE FROM user WHERE id=?";
+    getdata(sql, [id], result => {
+        if (result.affectedRows > 0) {
             res.send({
-                code:200,
-                msg:"删除成功"
+                code: 200,
+                msg: "删除成功"
             })
-        }else{
+        } else {
             res.send({
-                code:400,
-                msg:"删除失败"
+                code: 400,
+                msg: "删除失败"
             })
         }
-    }) 
+    })
 })
 
 module.exports = r

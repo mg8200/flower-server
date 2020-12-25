@@ -74,13 +74,33 @@ r.get("/getOrderDetail/:id", (req, res) => {
     })
 })
 
+// 删除订单
+r.post("/deleteOrder", (req, res) => {
+    let id = req.body.id
+    let sql = "DELETE FROM orders WHERE id=?";
+    getdata(sql, [id], result => {
+        if (result.affectedRows > 0) {
+            res.status(200).json({
+                code: 200,
+                msg: "删除成功"
+            })
+        } else {
+            res.status(400).json({
+                code: 400,
+                msg: "删除失败"
+            })
+        }
+    })
+})
+
 // 确定收货
 r.post("/sureGoods", (req, res) => {
     let id = req.body.id;
     let token = req.body.token;
+    let time = req.body.time;
     let uid = jwtDecode(token).id;
-    let sql = "UPDATE orders SET status=5 where id=? and uid=?"
-    getdata(sql, [id, uid], result => {
+    let sql = "UPDATE orders SET status=5,received_time=? where id=? and uid=?"
+    getdata(sql, [time, id, uid], result => {
         if (result.affectedRows > 0) {
             res.send({
                 code: 200,
@@ -227,5 +247,166 @@ r.get("/auditOrderCount", (req, res) => {
         }
     })
 })
+
+//***************************************************************************************************************************************************************************** 
+// 以下后台管理系统的接口
+// 获取订单列表
+r.get("/getOrderAllByLimit", (req, res) => {
+    let obj = req.query;
+    if (!obj.size) obj.size = 5;
+    if (!obj.currentPage) obj.currentPage = 1;
+    obj.page = (obj.currentPage - 1) * obj.size;
+    let sql = 'SELECT * FROM orders LIMIT ?,?'
+    let all = 'SELECT COUNT(*) as count FROM orders';
+    getdata(all, [], result => {
+        let count = result[0].count;
+        getdata(sql, [obj.page, parseInt(obj.size)], data => {
+            if (data.length > 0) {
+                res.status(200).json({
+                    code: 200,
+                    msg: "获取数据成功",
+                    data: {
+                        data,
+                        size: obj.size,
+                        total: count,
+                    }
+                })
+            } else {
+                res.send({
+                    code: 400,
+                    msg: "获取数据为空",
+                    data: []
+                })
+            }
+        })
+    })
+})
+
+// 修改订单数据
+r.post("/changeOrderData", (req, res) => {
+    let obj = req.body.obj;
+    let id = obj.id;
+    let sql = `UPDATE orders SET ? where id=?`;
+    getdata(sql, [obj, id], result => {
+        if (result.affectedRows > 0) {
+            res.status(200).json({
+                code: 200,
+                msg: "数据修改成功",
+            })
+        } else {
+            res.status(400).json({
+                code: 400,
+                msg: "数据修改失败",
+            })
+        }
+    })
+})
+
+// 修改订单的状态
+r.post("/changeOrderStatus", (req, res) => {
+    let status = req.body.status;
+    let id = req.body.id;
+    let sql = `UPDATE orders SET status=? where id=?`;
+    getdata(sql, [status, id], result => {
+        if (result.affectedRows > 0) {
+            res.status(200).json({
+                code: 200,
+                msg: "订单状态修改成功",
+            })
+        } else {
+            res.status(400).json({
+                code: 400,
+                msg: "订单状态修改失败",
+            })
+        }
+    })
+})
+
+
+// 删除订单
+r.post("/deleteOrder", (req, res) => {
+    let id = req.body.id;
+    let sql = "DELETE FROM orders WHERE id=?";
+    getdata(sql, [id], result => {
+        if (result.affectedRows > 0) {
+            res.status(200).json({
+                code: 200,
+                msg: "订单删除成功",
+            })
+        } else {
+            res.status(400).json({
+                code: 400,
+                msg: "订单删除失败",
+            })
+        }
+    })
+})
+
+// 按id来搜索某个订单
+r.get("/searchOrder", (req, res) => {
+    let obj =req.query
+    let keyword = req.query.keyword;
+    if (!obj.size) obj.size = 5;
+    if (!obj.currentPage) obj.currentPage = 1;
+    obj.page = (obj.currentPage - 1) * obj.size;
+    let sql = `select * from orders where id LIKE '%${keyword}%' LIMIT ?,?`;
+    let all = `select count(*) as count from orders where id LIKE '%${keyword}%'`
+    getdata(all, [], data => {
+        let count = data[0].count;
+        getdata(sql, [obj.page, parseInt(obj.size)], result => {
+            if (result.length > 0) {
+                res.status(200).json({
+                    code: 200,
+                    msg: `共查询到${result.length}条数据`,
+                    data: {
+                        data:result,
+                        size: obj.size,
+                        total: count,
+                    }
+                })
+            } else {
+                res.send({
+                    code: 400,
+                    msg: "查询数据为空",
+                    data: []
+                })
+            }
+        })
+    })
+})
+
+// 按订单状态进行获取订单数据
+r.get("/selectOrderByStatus", (req, res) => {
+    let obj =req.query
+    let status = req.query.status;
+    if (!obj.size) obj.size = 5;
+    if (!obj.currentPage) obj.currentPage = 1;
+    obj.page = (obj.currentPage - 1) * obj.size;
+    let sql = `select * from orders where status=? LIMIT ?,?`;
+    let all = `select count(*) as count from orders where status=?`
+    getdata(all, [status], data => {
+        let count = data[0].count;
+        getdata(sql, [status,obj.page, parseInt(obj.size)], result => {
+            if (result.length > 0) {
+                res.status(200).json({
+                    code: 200,
+                    msg: `共查询到${result.length}条数据`,
+                    data: {
+                        data:result,
+                        size: obj.size,
+                        total: count,
+                    }
+                })
+            } else {
+                res.send({
+                    code: 400,
+                    msg: "查询数据为空",
+                    data: []
+                })
+            }
+        })
+    })
+})
+
 
 module.exports = r

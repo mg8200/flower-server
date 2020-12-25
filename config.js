@@ -1,3 +1,4 @@
 module .exports ={
-    jwtSecret:"somesecrtekeyforjsonwebtoken"
+    jwtSecret:"somesecrtekeyforjsonwebtoken",
+    expiresIn:"1day"
 }

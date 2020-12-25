@@ -7,6 +7,7 @@ const jwtDecode = require("jwt-decode");
 // 将商品加入购物车
 r.post("/joinCar", (req, res) => {
     let obj = req.body.data;
+    console.log(obj)
     let uid = jwtDecode(obj.token).id;
     let arr = {};
     arr.uid = uid;
@@ -97,5 +98,27 @@ r.post("/deleteItem",(req,res)=>{
     })
 })
 
+
+// 更新购物车商品数量
+r.post("/updateCount",(req,res)=>{
+    let token =req.body.token;
+    let carId=req.body.carId;
+    let uid =jwtDecode(token).id;
+    let count =req.body.count;
+    let sql ="update shoppingCar set count=? where id =? and uid=?"
+    getdata(sql,[count,carId,uid],result=>{
+        if(result.affectedRows>0){
+            res.send({
+                code:200,
+                msg:"数量更新成功"
+            })
+        }else{
+            res.status(400).json({
+                code:400,
+                msg:"更新失败"
+            })
+        }
+    })
+})
 
 module.exports = r
